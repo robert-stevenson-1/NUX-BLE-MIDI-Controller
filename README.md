@@ -1,4 +1,4 @@
-# NUX BLE MIDI Controller (Version 0.9) (DEV)
+# NUX BLE MIDI Controller (Version 0.9)
 ## Important this Project is W.I.P.  
 This project focuses on creating a BLE MIDI Floor controller built using an ESP32 and C++ with the Arduino framework to control the NUX Mighty Amp Line up.
 (The Mighty Air was used for this project, so as a result config header files would need changing and depending your device model the CC message number would need changing too).
