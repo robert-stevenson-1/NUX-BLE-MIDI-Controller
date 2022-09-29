@@ -15,7 +15,7 @@ CHANGES:      - Version 0.9 (29/09/2022): Finished and Uploaded to Github. This 
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <ezButton.h>
+#include <Bounce2.h>
 #include <BLEMidi_Transport.h>
 #include <hardware/BLEMIDI_Client_ESP32.h>
 // Own Library/File inclusions
@@ -40,7 +40,7 @@ CHANGES:      - Version 0.9 (29/09/2022): Finished and Uploaded to Github. This 
 #define BTN_DRUMS_PIN 19
 #define BTN_PRESET_DOWN_PIN 12
 #define BTN_PRESET_UP_PIN 23
-#define BTN_OTHER_PIN 34
+#define BTN_OTHER_PIN 34 // This pin does not work as a button input (Working on alternative solution)
 
 #define POT_MAST_VOL_PIN 32
 #define POT_GAIN_PIN 33
@@ -69,15 +69,15 @@ CHANGES:      - Version 0.9 (29/09/2022): Finished and Uploaded to Github. This 
 // ======================
 
 // Initialise the Button Objects with the pin numbers that they will read the button states from.
-ezButton btnGate(BTN_GATE_PIN);
-ezButton btnEFX(BTN_EFX_PIN);
-ezButton btnMod(BTN_MOD_PIN);
-ezButton btnDelay(BTN_DELAY_PIN);
-ezButton btnReverb(BTN_REVERB_PIN);
-ezButton btnDrums(BTN_DRUMS_PIN);
-ezButton btnPresetUp(BTN_PRESET_UP_PIN);
-ezButton btnPresetDown(BTN_PRESET_DOWN_PIN);
-ezButton btnOther(BTN_OTHER_PIN);
+Bounce2::Button btnGate = Bounce2::Button();
+Bounce2::Button btnEFX = Bounce2::Button();
+Bounce2::Button btnMod = Bounce2::Button();
+Bounce2::Button btnDelay = Bounce2::Button();
+Bounce2::Button btnReverb = Bounce2::Button();
+Bounce2::Button btnDrums = Bounce2::Button();
+Bounce2::Button btnPresetUp = Bounce2::Button();
+Bounce2::Button btnPresetDown = Bounce2::Button();
+Bounce2::Button btnOther = Bounce2::Button();
 
 // Initialise the I2C Display
 Adafruit_SSD1306 display(128, 64, &Wire);
@@ -220,15 +220,43 @@ void setup()
                               syncDeviceDataChanges(ControlNumber, ControlValue); 
                               });
 
-  btnGate.setDebounceTime(DEBOUNCE_TIME);
-  btnEFX.setDebounceTime(DEBOUNCE_TIME);
-  btnMod.setDebounceTime(DEBOUNCE_TIME);
-  btnDelay.setDebounceTime(DEBOUNCE_TIME);
-  btnReverb.setDebounceTime(DEBOUNCE_TIME);
-  btnDrums.setDebounceTime(DEBOUNCE_TIME);
-  btnPresetUp.setDebounceTime(DEBOUNCE_TIME);
-  btnPresetDown.setDebounceTime(DEBOUNCE_TIME);
-  btnOther.setDebounceTime(DEBOUNCE_TIME);
+// Setup the buttons by attaching pins and setting debounce times
+  btnGate.attach(BTN_GATE_PIN, INPUT_PULLUP);
+  btnGate.interval(DEBOUNCE_TIME);
+  btnGate.setPressedState(LOW);
+
+  btnEFX.attach(BTN_EFX_PIN, INPUT_PULLUP);
+  btnEFX.interval(DEBOUNCE_TIME);
+  btnEFX.setPressedState(LOW);
+  
+  btnMod.attach(BTN_MOD_PIN, INPUT_PULLUP);
+  btnMod.interval(DEBOUNCE_TIME);
+  btnMod.setPressedState(LOW);
+  
+  btnDelay.attach(BTN_DELAY_PIN, INPUT_PULLUP);
+  btnDelay.interval(DEBOUNCE_TIME);
+  btnDelay.setPressedState(LOW);
+  
+  btnReverb.attach(BTN_REVERB_PIN, INPUT_PULLUP);
+  btnReverb.interval(DEBOUNCE_TIME);
+  btnReverb.setPressedState(LOW);
+  
+  btnDrums.attach(BTN_DRUMS_PIN, INPUT_PULLUP);
+  btnDrums.interval(DEBOUNCE_TIME);
+  btnDrums.setPressedState(LOW);
+  
+  btnPresetUp.attach(BTN_PRESET_UP_PIN, INPUT_PULLUP);
+  btnPresetUp.interval(DEBOUNCE_TIME);
+  btnPresetUp.setPressedState(LOW);
+  
+  btnPresetDown.attach(BTN_PRESET_DOWN_PIN, INPUT_PULLUP);
+  btnPresetDown.interval(DEBOUNCE_TIME);
+  btnPresetDown.setPressedState(LOW);
+  
+  btnOther.attach(BTN_OTHER_PIN, INPUT_PULLUP);
+  btnOther.interval(DEBOUNCE_TIME);
+  btnOther.setPressedState(LOW);
+
 }
 
 void loop()
@@ -243,36 +271,36 @@ void loop()
     }
 
     // check button inputs
-    btnGate.loop();
-    if (btnGate.isPressed())
+    btnGate.update();
+    if (btnGate.pressed())
       toggleGate();
 
-    btnEFX.loop();
-    if (btnEFX.isPressed())
+    btnEFX.update();
+    if (btnEFX.pressed())
       toggleEFX();
 
-    btnMod.loop();
-    if (btnMod.isPressed())
+    btnMod.update();
+    if (btnMod.pressed())
       toggleMod();
 
-    btnDelay.loop();
-    if (btnDelay.isPressed())
+    btnDelay.update();
+    if (btnDelay.pressed())
       toggleDelay();
 
-    btnReverb.loop();
-    if (btnReverb.isPressed())
+    btnReverb.update();
+    if (btnReverb.pressed())
       toggleReverb();
 
-    btnDrums.loop();
-    if (btnDrums.isPressed())
+    btnDrums.update();
+    if (btnDrums.pressed())
       toggleDrums();
 
-    btnPresetUp.loop();
-    if (btnPresetUp.isPressed())
+    btnPresetUp.update();
+    if (btnPresetUp.pressed())
       presetUp();
 
-    btnPresetDown.loop();
-    if (btnPresetDown.isPressed())
+    btnPresetDown.update();
+    if (btnPresetDown.pressed())
       presetDown();
 
     // btnOther.loop();
