@@ -6,15 +6,16 @@ DESCRIPTION:  The main program source code where all the program logic and opera
               communicating with the NUX BT Amp/Device by taking input from the controller and sending
               the relevant commands to the device.
 
-CHANGES:      - Version 0.9 (29/09/2022): Finished and Uploaded to Github. This version is essentially function 
-                                          and works, however project is missing essential implementation documentation/instructions
-                                          and need some final finishes and polish on the code.
+CHANGES:      - Version 0.9 (29/09/2022): 
+                  - Finished and Uploaded to Github. This version is essentially function 
+                    and works, however project is missing essential implementation documentation/instructions
+                    and need some final finishes and polish on the code.
+                  - No longer using the Adafruit SSD1306 Library for the Display
 */
 
 // Installed Library includes (Libraries installed via PlatformIO interface)
 #include <Arduino.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <SSD1306Wire.h>
 #include <Bounce2.h>
 #include <BLEMidi_Transport.h>
 #include <hardware/BLEMIDI_Client_ESP32.h>
@@ -30,7 +31,6 @@ CHANGES:      - Version 0.9 (29/09/2022): Finished and Uploaded to Github. This 
 #define SCREEN_ADDRESS 0x3C   // I2C address for the Display.
 
 // ===Input/Output Pin Definitions===
-// Due to Silicon bug in (my)chip, pin 5 cannot be pulled down. Evidence: https://esp32.com/viewtopic.php?t=439
 #define LED_STATUS 2
 #define BTN_GATE_PIN 15
 #define BTN_EFX_PIN 4
@@ -80,7 +80,7 @@ Bounce2::Button btnPresetDown = Bounce2::Button();
 Bounce2::Button btnOther = Bounce2::Button();
 
 // Initialise the I2C Display
-Adafruit_SSD1306 display(128, 64, &Wire);
+SSD1306Wire display(SCREEN_ADDRESS, SDA, SCL);
 
 // Program control variables that determine the flow
 bool initLoop = true;
@@ -164,7 +164,7 @@ void setup()
   pinMode(LED_STATUS, OUTPUT);
   digitalWrite(LED_STATUS, LOW);
 
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
+  if (!display.init())
   {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
@@ -172,11 +172,11 @@ void setup()
   }
 
   // Setup display
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 0);
-  display.clearDisplay();
-  display.println("Searching...");
+  display.clear();
+  display.flipScreenVertically();
+  display.setFont(ArialMT_Plain_10);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(0,0,"Searching...");
   display.display();
 
   MIDI.begin(MIDI_CHANNEL_OMNI);
@@ -201,13 +201,12 @@ void setup()
                                 {
                               Serial.println("---------NOT CONNECTED---------");
                               digitalWrite(LED_STATUS, LOW);
-                              display.clearDisplay();
-                              display.setCursor(0, 0);
-                              display.println("Lost Connection\n");
-                              display.println("Rescanning...");
-                              display.display();
                               connBT = false;
                               initLoop = true; 
+                              display.clear();
+                              display.drawString(0,0, "Lost Connection");
+                              display.drawString(0,10, "Rescanning...");
+                              display.display();
                               });
   MIDI.setHandleControlChange([](byte channel, byte ControlNumber, byte ControlValue)
                               {
@@ -313,22 +312,14 @@ void loop()
 
 void displayInfo()
 {
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.println("Connected");
-  display.print("Preset: ");
-  display.println(current_preset + 1);
-  display.print("Master Vol: ");
-  display.println(curMasterVolValue);
-  display.print("Gain: ");
-  display.println(curGainValue);
-  display.print("Bass: ");
-  display.println(curBassValue);
-  display.print("Mid: ");
-  display.println(curMidValue);
-  display.print("Treble: ");
-  display.println(curTrebleValue);
-
+  display.clear();
+  display.drawString(0,0, "Connected");
+  display.drawString(0,8, "Preset: " + String(current_preset + 1));
+  display.drawString(0,16, "Master Vol: " + String(curMasterVolValue));
+  display.drawString(0,24, "Gain: " + String(curGainValue));
+  display.drawString(0,32, "Bass: " +String(curBassValue));
+  display.drawString(0,40, "Mid: " + String(curMidValue));
+  display.drawString(0,48, "Treble: " + String(curTrebleValue));
   display.display();
 }
 
