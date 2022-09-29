@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.tcc": "cpp"
+		},
+		"cSpell.words": [
+			"footswitch"
+		],
+		"cSpell.ignoreWords": [
+			"SWITCHCAPVCC"
+		]
+	}
+}

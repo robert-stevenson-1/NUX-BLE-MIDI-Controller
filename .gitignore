@@ -5,6 +5,7 @@
 .vscode/ipch
 Private/
 ESP32 Mighty Air Control board/
+include/NUX_CONFIG.h
 
 # # Prerequisites
 # *.d

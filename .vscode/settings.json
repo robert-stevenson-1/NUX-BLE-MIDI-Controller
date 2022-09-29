@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.tcc": "cpp"
+    },
+    "cSpell.words": [
+        "Rescanning",
+        "footswitch",
+        "Adafruit",
+        "BLEMIDI"
+    ]
+}
