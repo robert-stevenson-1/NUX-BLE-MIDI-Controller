@@ -173,6 +173,7 @@ void setup()
 
   // Setup display
   display.clear();
+  display.setBrightness(50);
   display.flipScreenVertically();
   display.setFont(ArialMT_Plain_10);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
