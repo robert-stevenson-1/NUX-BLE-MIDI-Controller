@@ -7,7 +7,9 @@ This project focuses on creating a BLE MIDI Floor controller built using an ESP3
 TODO: Instructions on how to build the project
 
 ## Hardware:
-TODO: Create list of Hardware
+TODO: Populate Hardware list
+- ESP32 (I used an ESP32 devkit v1 development board) (The one with 30 GPIO Pins broken out)
+- 6 x 10K Ohm Potentiometers (Only 5 are functional, the 6th, "Presence", pot will be implemented in V1.0
 
 ## Steps
 TODO: Create instruction steps
@@ -16,6 +18,7 @@ TODO: Create instruction steps
 ## Short Term
 - Code Refactoring (with the aim to reduce the program size in flash)
 - Code Refactoring (Refractor with an OOP approach)
+- Unlock more communication data to the devices (eg. Preset Data, Battery info, etc...)
 - Design Custom PCB (w/ Removable ESP32)
 - Design Enclosure 
 
@@ -30,7 +33,7 @@ TODO: Create instruction steps
 # Disclaimer and Questions
 - This project was developed using the PlatformIO Extension for VSCode, as a result I have not converted or check compatibility with the Arduino IDE (This will be address at some point in the future)
 - I am currently working on this in my free time, so whilst I will be working on this project when I can it means that updates will not be as frequent as I would like them to be.
-- Instructions and guide to make you own project will come in time for those how are less familiar with Electronics and Microcontroller programming
+- Instructions and guide to make you own controller will come in time for those how are less familiar with Electronics and Microcontroller programming
 
 # Libraries
 The Libraries used in the project:
