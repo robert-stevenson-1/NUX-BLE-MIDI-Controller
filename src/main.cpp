@@ -1,5 +1,5 @@
 /*
-FILE NAME:    main.cpp (Version 0.9)
+FILE NAME:    main.cpp (Version 1.0)
 AUTHOR:       Robert Stevenson
 DATE CREATED: 22/09/2022
 DESCRIPTION:  The main program source code where all the program logic and operations take place for
@@ -47,7 +47,7 @@ CHANGES:      - Version 0.9 (29/09/2022):
 #define POT_BASS_PIN 25
 #define POT_MID_PIN 26
 #define POT_TREBLE_PIN 14
-#define POT_PRESENCE_PIN 27
+#define POT_PRESENCE_PIN 27 //TODO: Implement functionality
 
 // ===Breadboard Setup===
 // #define LED_STATUS 13
@@ -356,14 +356,39 @@ void syncDeviceDataChanges(byte ControlNumber, byte ControlValue)
 {
   switch ((int)ControlNumber)
   {
-  case CC_PRESET:
-    current_preset = ControlValue;
-    break;
-
-    // TODO: POPULATE TO OTHER CC COMMAND SYNCING
-
-  default:
-    break;
+    // TODO: Added AMP Presence sync once implemented
+    case CC_PRESET:
+      current_preset = ControlValue;
+      break;
+    case CC_AMP_MASTER_VOL:
+      curMasterVolValue = ControlValue;
+      oldMasterVolValue = ControlValue;
+      break;
+    case CC_AMP_GAIN:
+      curGainValue = ControlValue;
+      oldGainValue = ControlValue;
+      break;
+    case CC_AMP_BASS:
+      curBassValue = ControlValue;
+      oldBassValue = ControlValue;
+      break;
+    case CC_AMP_MID:
+      curMidValue = ControlValue;
+      oldMidValue = ControlValue;
+      break;
+    case CC_AMP_TREBLE:
+      curTrebleValue = ControlValue;
+      oldTrebleValue = ControlValue;
+      break;
+    case CC_DRUMS_ENABLE:
+      if (ControlValue == 0){
+        drumsToggle = false;
+      }else{
+        drumsToggle = true;
+      }
+      
+    default:
+      break;
   }
 
   displayInfo();
@@ -406,11 +431,13 @@ void toggleDrums()
   //Serial.println("Drums Toggled"); // Debug Message(s)
   if (drumsToggle)
   {
+    // Drums OFF
     drumsToggle = false;
     MIDI.sendControlChange(CC_DRUMS_ENABLE, 0, 1);
   }
   else
   {
+    // Drums ON
     drumsToggle = true;
     MIDI.sendControlChange(CC_DRUMS_ENABLE, 1, 1);
   }
