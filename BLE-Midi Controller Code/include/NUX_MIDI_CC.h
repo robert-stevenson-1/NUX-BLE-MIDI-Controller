@@ -32,7 +32,7 @@
 #define CC_AMP_BASS 13
 #define CC_AMP_MID 14
 #define CC_AMP_TREBLE 15
-#define CC_AMP_PRESENCE 80
+#define CC_AMP_PRESENCE 80 // Also is for OTHER Amp parameter value eg. Mid Freq
 
 // Drum Machine related CC Message IDs
 #define CC_DRUMS_ENABLE 122

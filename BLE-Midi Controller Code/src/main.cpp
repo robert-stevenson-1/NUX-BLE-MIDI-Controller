@@ -31,7 +31,6 @@ CHANGES:      - Version 0.9 (29/09/2022):
 #define SCREEN_ADDRESS 0x3C   // I2C address for the Display.
 
 // ===Input/Output Pin Definitions===
-#define LED_STATUS 2
 #define BTN_GATE_PIN 15
 #define BTN_EFX_PIN 4
 #define BTN_MOD_PIN 5
@@ -40,33 +39,14 @@ CHANGES:      - Version 0.9 (29/09/2022):
 #define BTN_DRUMS_PIN 19
 #define BTN_PRESET_DOWN_PIN 12
 #define BTN_PRESET_UP_PIN 23
-#define BTN_OTHER_PIN 34 // This pin does not work as a button input (Working on alternative solution)
+#define BTN_OTHER_PIN 2 // <== User Definable role via function
 
 #define POT_MAST_VOL_PIN 32
 #define POT_GAIN_PIN 33
 #define POT_BASS_PIN 25
 #define POT_MID_PIN 26
 #define POT_TREBLE_PIN 14
-#define POT_PRESENCE_PIN 27 //TODO: Implement functionality
-
-// ===Breadboard Setup===
-// #define LED_STATUS 13
-// #define BTN_GATE_PIN 26
-// #define BTN_EFX_PIN 18
-// #define BTN_MOD_PIN 19
-// #define BTN_DRUMS_PIN 23
-// #define BTN_PRESET_UP_PIN 2
-// #define BTN_PRESET_DOWN_PIN 15
-// #define BTN_DELAY_PIN 21
-// #define BTN_REVERB_PIN 14
-
-// #define POT_MAST_VOL_PIN 25
-// #define POT_GAIN_PIN 34
-// #define POT_BASS_PIN 35
-// #define POT_MID_PIN 32
-// #define POT_TREBLE_PIN 33
-// #define POT_PRESENCE_PIN 26
-// ======================
+#define POT_AMP_OTHER_PIN 27 
 
 // Initialise the Button Objects with the pin numbers that they will read the button states from.
 Bounce2::Button btnGate = Bounce2::Button();
@@ -112,13 +92,18 @@ int8_t bass_buf_i = 0;                       // Buffer index (Bass)
 
 int8_t curMidValue = 0;                      // 0 - 100 range after the pot value is mapped (Mids)
 int8_t oldMidValue = 0;                      // 0 - 100 range after the pot value is mapped (old Mids)
-uint16_t mid_Buffer[FILTER_LEN] = {0};       // History Buffer to get accurate ADC readings and conversions (Gain)
-int8_t mid_buf_i = 0;                        // Buffer index (Gain)
+uint16_t mid_Buffer[FILTER_LEN] = {0};       // History Buffer to get accurate ADC readings and conversions (Mids)
+int8_t mid_buf_i = 0;                        // Buffer index (Mids)
 
 int8_t curTrebleValue = 0;                   // 0 - 100 range after the pot value is mapped (Treble)
 int8_t oldTrebleValue = 0;                   // 0 - 100 range after the pot value is mapped (old Treble)
-uint16_t treble_Buffer[FILTER_LEN] = {0};    // History Buffer to get accurate ADC readings and conversions (Gain)
-int8_t treble_buf_i = 0;                     // Buffer index (Gain)
+uint16_t treble_Buffer[FILTER_LEN] = {0};    // History Buffer to get accurate ADC readings and conversions (Treble)
+int8_t treble_buf_i = 0;                     // Buffer index (Treble)
+
+int8_t curAmpOtherValue = 0;                   // 0 - 100 range after the pot value is mapped (Amp Other)
+int8_t oldAmpOtherValue = 0;                   // 0 - 100 range after the pot value is mapped (Amp Other)
+uint16_t ampOther_Buffer[FILTER_LEN] = {0};    // History Buffer to get accurate ADC readings and conversions (Amp Other)
+int8_t ampOther_buf_i = 0;                     // Buffer index (Amp Other)
 
 // Connect to the AMP via bluetooth with BT NAME
 //BLEMIDI_CREATE_INSTANCE(AMP_BT_NAME, MIDI);
@@ -139,13 +124,14 @@ void toggleEFX();    // Toggle the Effects Pedal
 void toggleMod();    // Toggle the Modulation Effects Pedal
 void toggleDelay();  // Toggle the Delay Effects Pedal
 void toggleReverb(); // Toggle the Reverb Effects Pedal
-void toggleOther();  // Spare Button
+void userFunction1();  // Function for user to implement for their own needs on the spare footswitch 
 
 void changeAmpMasterVol(int8_t value); // Change the Amp Master Volume Settings
 void changeAmpGain(int8_t value);      // Change the Amp Gain Settings
 void changeAmpBass(int8_t value);      // Change the Amp Bass Settings
 void changeAmpMid(int8_t value);       // Change the Amp Mid Settings
 void changeAmpTreble(int8_t value);    // Change the Amp Treble Settings
+void changeAmpOther(int8_t value);          // Change the Amp Other/Presence Settings
 
 // Currently this function is unused as no smoothing of values is need
 //float valueFilter(float _alpha, float _oldValue, float _newValue); // return the Filtered Result
@@ -160,9 +146,7 @@ void setup()
   adcAttachPin(POT_BASS_PIN);
   adcAttachPin(POT_MID_PIN);
   adcAttachPin(POT_TREBLE_PIN);
-
-  pinMode(LED_STATUS, OUTPUT);
-  digitalWrite(LED_STATUS, LOW);
+  adcAttachPin(POT_AMP_OTHER_PIN);
 
   if (!display.init())
   {
@@ -185,7 +169,7 @@ void setup()
   BLEMIDI.setHandleConnected([]()
                               {
                               Serial.println("---------CONNECTED---------");
-                              digitalWrite(LED_STATUS, HIGH);
+                              //digitalWrite(LED_STATUS, HIGH);
                               displayInfo();
                               connBT = true;
                               initLoop = true;
@@ -201,7 +185,7 @@ void setup()
   BLEMIDI.setHandleDisconnected([]()
                                 {
                               Serial.println("---------NOT CONNECTED---------");
-                              digitalWrite(LED_STATUS, LOW);
+                              //digitalWrite(LED_STATUS, LOW);
                               connBT = false;
                               initLoop = true; 
                               display.clear();
@@ -303,8 +287,9 @@ void loop()
     if (btnPresetDown.pressed())
       presetDown();
 
-    // btnOther.loop();
-    // if(btnOther.isPressed()) ;
+    btnOther.update();
+    if(btnOther.pressed()) 
+      userFunction1();
 
     // Read and check for Pot value updates
     readPots();
@@ -321,6 +306,7 @@ void displayInfo()
   display.drawString(0,32, "Bass: " +String(curBassValue));
   display.drawString(0,40, "Mid: " + String(curMidValue));
   display.drawString(0,48, "Treble: " + String(curTrebleValue));
+  display.drawString(0,56, "Amp Other: " + String(curAmpOtherValue));
   display.display();
 }
 
@@ -350,13 +336,13 @@ void readPots()
   changeAmpBass(map(readADCAvg(POT_BASS_PIN, bass_Buffer, &bass_buf_i), POT_MIN_VALUE, POT_MAX_VALUE, 0, 127));
   changeAmpMid(map(readADCAvg(POT_MID_PIN, mid_Buffer, &mid_buf_i), POT_MIN_VALUE, POT_MAX_VALUE, 0, 127));
   changeAmpTreble(map(readADCAvg(POT_TREBLE_PIN, treble_Buffer, &treble_buf_i), POT_MIN_VALUE, POT_MAX_VALUE, 0, 127));
+  changeAmpOther(map(readADCAvg(POT_AMP_OTHER_PIN, ampOther_Buffer, &ampOther_buf_i), POT_MIN_VALUE, POT_MAX_VALUE, 0, 127));
 }
 
 void syncDeviceDataChanges(byte ControlNumber, byte ControlValue)
 {
   switch ((int)ControlNumber)
   {
-    // TODO: Added AMP Presence sync once implemented
     case CC_PRESET:
       current_preset = ControlValue;
       break;
@@ -379,6 +365,10 @@ void syncDeviceDataChanges(byte ControlNumber, byte ControlValue)
     case CC_AMP_TREBLE:
       curTrebleValue = ControlValue;
       oldTrebleValue = ControlValue;
+      break;
+    case CC_AMP_PRESENCE:
+      curAmpOtherValue = ControlValue;
+      oldAmpOtherValue = ControlValue;
       break;
     case CC_DRUMS_ENABLE:
       if (ControlValue == 0){
@@ -579,8 +569,22 @@ void changeAmpTreble(int8_t value)
   }
 }
 
-// Currently this function is unused as no smoothing of values is need
-// float valueFilter(float _alpha, float _oldValue, float _newValue)
-// {
-//   return (_alpha * _newValue) + ((1 - _alpha) * _oldValue);
-// }
+void changeAmpOther(int8_t value)
+{
+  curAmpOtherValue = value;
+  if (oldAmpOtherValue != curAmpOtherValue)
+  {
+    oldAmpOtherValue = curAmpOtherValue;
+    MIDI.sendControlChange(CC_AMP_PRESENCE, curAmpOtherValue, 1);
+    displayInfo();
+  }
+}
+
+//=================================
+//===== Custom User Functions =====
+//=================================
+
+void userFunction1(){
+  // USER TO IMPLEMENT !!!
+  //Serial.println("CUSTOM USER SWITCH FUNC");
+}
